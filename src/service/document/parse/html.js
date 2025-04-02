@@ -1,4 +1,4 @@
-const { splitText } = require("./clean");
+const { splitText, preserveDocumentContext } = require("./clean");
 
 function extractSectionsAndContent(html) {
     // Remove all content within tags except for <h1> to <h6> and <p>

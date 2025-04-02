@@ -1,8 +1,8 @@
 const mammoth = require("mammoth");
-const { removeCitations, removeHyperlinks } = require("./clean");
+const { removeCitations, removeHyperlinks, preserveDocumentContext } = require("./clean");
 const { extractSectionsAndContent } = require('./html');
 
-async function parseDocx(docx) {
+async function parseDocx(docx, documentPath) {
   let doc = await mammoth.convertToHtml({ buffer: docx });
 
   if (!doc.value) {
@@ -12,7 +12,8 @@ async function parseDocx(docx) {
   let html = removeCitations(doc.value);
   html = removeHyperlinks(html);
 
-  return extractSectionsAndContent(html);
+  const sections = extractSectionsAndContent(html);
+  return preserveDocumentContext(sections, documentPath);
 }
 
 module.exports = {

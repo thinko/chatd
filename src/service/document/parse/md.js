@@ -1,5 +1,8 @@
-const { splitText } = require("./clean");
+const marked = require("marked");
+const { splitText, removeCitations, removeHyperlinks, preserveDocumentContext } = require("./clean");
+const { extractSectionsAndContent } = require("./html");
 
+// Original parsing function
 function parseMd(markdownText) {
   const sections = [];
   const lines = markdownText.split("\n");
@@ -39,6 +42,23 @@ function parseMd(markdownText) {
   return sections;
 }
 
+// New function with document path support
+function parseMdToHtml(markdown, documentPath) {
+  // Convert markdown to HTML using marked
+  const html = marked.parse(markdown);
+  
+  // Clean the HTML content by removing citations and hyperlinks
+  let cleanedHtml = removeCitations(html);
+  cleanedHtml = removeHyperlinks(cleanedHtml);
+  
+  // Extract sections and content from the HTML
+  const sections = extractSectionsAndContent(cleanedHtml);
+  
+  // Preserve document context if documentPath is provided
+  return preserveDocumentContext(sections, documentPath);
+}
+
 module.exports = {
   parseMd,
+  parseMdToHtml,
 };

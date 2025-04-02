@@ -1,3 +1,5 @@
+const { splitText, preserveDocumentContext } = require("./clean");
+
 function parseTxt(data) {
   // chunk the data based on new line characters
   let lines = data.split("\n");
@@ -25,6 +27,18 @@ function parseTxt(data) {
   ];
 }
 
+function parseTxtNew(text, documentPath) {
+  // Simple parsing for plain text files
+  const sections = [{
+    section: "Text Document",
+    content: splitText(text),
+  }];
+  
+  // Preserve document context if documentPath is provided
+  return preserveDocumentContext(sections, documentPath);
+}
+
 module.exports = {
   parseTxt,
-};
+  parseTxtNew,
+}

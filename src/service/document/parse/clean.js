@@ -32,9 +32,19 @@ function splitText(text) {
   return chunks;
 }
 
+function preserveDocumentContext(sections, documentPath) {
+  if (!documentPath) return sections;
+  
+  return sections.map(section => ({
+    ...section,
+    documentPath
+  }));
+}
+
 module.exports = {
   removeImages,
   removeHyperlinks,
   removeCitations,
   splitText,
+  preserveDocumentContext,
 };
