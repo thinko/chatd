@@ -1,10 +1,109 @@
 const path = require("path");
 const pdf2md = require('@opendocsg/pdf2md');
-const { pdfjs } = require("./pdfjs-dist/legacy/build/pdf");
+
+// Add polyfill for DOMMatrix which is required by PDF.js but not available in Node.js
+if (typeof globalThis.DOMMatrix === 'undefined') {
+  globalThis.DOMMatrix = class DOMMatrix {
+    constructor(matrix) {
+      if (matrix) {
+        this.a = matrix[0] || 1;
+        this.b = matrix[1] || 0;
+        this.c = matrix[2] || 0;
+        this.d = matrix[3] || 1;
+        this.e = matrix[4] || 0;
+        this.f = matrix[5] || 0;
+      } else {
+        this.a = 1;
+        this.b = 0;
+        this.c = 0;
+        this.d = 1;
+        this.e = 0;
+        this.f = 0;
+      }
+    }
+
+    translate(x, y) {
+      this.e += x;
+      this.f += y;
+      return this;
+    }
+    
+    scale(x, y) {
+      this.a *= x;
+      this.d *= y || x;
+      return this;
+    }
+    
+    multiply(matrix) {
+      const a = this.a * matrix.a + this.c * matrix.b;
+      const b = this.b * matrix.a + this.d * matrix.b;
+      const c = this.a * matrix.c + this.c * matrix.d;
+      const d = this.b * matrix.c + this.d * matrix.d;
+      const e = this.a * matrix.e + this.c * matrix.f + this.e;
+      const f = this.b * matrix.e + this.d * matrix.f + this.f;
+      
+      this.a = a;
+      this.b = b;
+      this.c = c;
+      this.d = d;
+      this.e = e;
+      this.f = f;
+      
+      return this;
+    }
+    
+    inverse() {
+      const det = this.a * this.d - this.b * this.c;
+      
+      const result = new DOMMatrix();
+      result.a = this.d / det;
+      result.b = -this.b / det;
+      result.c = -this.c / det;
+      result.d = this.a / det;
+      result.e = (this.c * this.f - this.d * this.e) / det;
+      result.f = (this.b * this.e - this.a * this.f) / det;
+      
+      return result;
+    }
+  };
+}
+
+// Also polyfill DOMMatrixReadOnly which might be used by PDF.js
+if (typeof globalThis.DOMMatrixReadOnly === 'undefined') {
+  globalThis.DOMMatrixReadOnly = globalThis.DOMMatrix;
+}
+
+// Add polyfill for Promise.withResolvers which is used by newer PDF.js versions
+if (typeof Promise.withResolvers !== 'function') {
+  Promise.withResolvers = function() {
+    let resolve, reject;
+    const promise = new Promise((res, rej) => {
+      resolve = res;
+      reject = rej;
+    });
+    return { promise, resolve, reject };
+  };
+}
+
+// Dynamically import pdfjs as it's an ES Module, but use the legacy build
+let pdfjs;
 const { removeCitations, removeHyperlinks, preserveDocumentContext, splitText } = require("./clean");
 
 async function parsePdf(filePath) {
   try {
+    // Import pdfjs dynamically if not already loaded, using legacy build for Node.js
+    if (!pdfjs) {
+      try {
+        const pdf = await import('pdfjs-dist/legacy/build/pdf.js');
+        pdfjs = pdf;
+      } catch (e) {
+        // Fallback to regular build if legacy not available
+        console.warn("Legacy PDF.js build not available, trying standard build:", e);
+        const pdf = await import('pdfjs-dist/build/pdf.mjs');
+        pdfjs = pdf;
+      }
+    }
+    
     const data = new Uint8Array(await require("fs").promises.readFile(filePath));
     const loadingTask = pdfjs.getDocument({ data });
     const doc = await loadingTask.promise;
@@ -38,9 +137,14 @@ async function parsePdf(filePath) {
   }
 }
 
-// Parse PDF by page (renamed from parsePdfDirect)
 async function parsePdfByPage(filePath) {
   try {
+    // Import pdfjs dynamically if not already loaded
+    if (!pdfjs) {
+      const pdf = await import('pdfjs-dist/build/pdf.mjs');
+      pdfjs = pdf;
+    }
+    
     const data = new Uint8Array(await require("fs").promises.readFile(filePath));
     const loadingTask = pdfjs.getDocument({ data });
     const doc = await loadingTask.promise;
@@ -133,6 +237,12 @@ async function parsePdfAsMd(filePath) {
 // Fallback implementation if the library fails
 async function fallbackPdfAsMd(filePath) {
   try {
+    // Import pdfjs dynamically if not already loaded
+    if (!pdfjs) {
+      const pdf = await import('pdfjs-dist/build/pdf.mjs');
+      pdfjs = pdf;
+    }
+    
     const data = new Uint8Array(await require("fs").promises.readFile(filePath));
     const loadingTask = pdfjs.getDocument({ data });
     const doc = await loadingTask.promise;

@@ -17,6 +17,9 @@ async function loadFile(filePath, parserSettings = null) {
   try {
     const fileExtension = path.extname(filePath).toLowerCase();
 
+    console.debug(`File Path: ${filePath}, Extension: "${fileExtension}"`);
+    console.debug(`Parser settings: ${JSON.stringify(parserSettings)}`);
+    
     switch (fileExtension) {
       case ".docx":
         const docx = await fs.readFile(filePath);

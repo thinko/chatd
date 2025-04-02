@@ -16,14 +16,20 @@ const {
   stopChat,
   serveOllama,
   stopOllama,
-  loadDocument,
   runOllamaModel,
   updateParserSettings,
+  loadDocument,
 } = require("./api.js");
 
 // When debug is set to true, the app will log debug messages to the console
 // This will be turned on by default when running the app in non-packaged mode
 global.debug = false;
+
+// Settings storage
+const localSettings = { parser: {} };
+
+// Reference to main window
+let mainWindow;
 
 const appVersion = app.getVersion();
 const osType = os.type(); // e.g., 'Darwin', 'Windows_NT', etc.
@@ -47,7 +53,7 @@ if (require("electron-squirrel-startup")) {
 }
 
 const createWindow = () => {
-  const mainWindow = new BrowserWindow({
+  mainWindow = new BrowserWindow({
     width: 800,
     height: 600,
     webPreferences: {
@@ -71,11 +77,16 @@ app.on("ready", () => {
   ipcMain.on("model:get", getModel);
   ipcMain.on("chat:send", sendChat);
   ipcMain.on("chat:stop", stopChat);
-  ipcMain.on("doc:load", loadDocument);
   ipcMain.on("ollama:serve", serveOllama);
   ipcMain.on("ollama:run", runOllamaModel);
   ipcMain.on("ollama:stop", stopOllama);
-  ipcMain.on("parser:settings", updateParserSettings);
+  ipcMain.on("parser:settings", (event, settings) => {
+    localSettings.parser = settings;
+    updateParserSettings(event, settings);
+  });
+
+  // Use the loadDocument function from api.js instead of implementing our own
+  ipcMain.on("doc:load", loadDocument);
 
   if (app.isPackaged) {
     // Check app location

@@ -162,20 +162,30 @@ function processDocument(filePath, event) {
       await store(e.embeddings);
       debugLog("Embeddings stored");
       event.reply("doc:load", { success: true, content: path.basename(filePath) });
+      // Send the embeddings-stored event to update the UI
+      event.sender.send("doc:embeddings-stored");
       loadingDoc = false;
     } else {
       event.reply("doc:load", { success: false, content: e.content });
+      // Also send embeddings-stored event on error to reset UI
+      event.sender.send("doc:embeddings-stored");
       loadingDoc = false;
     }
   });
 
-  worker.on('error', err => handleDocumentLoadError(err, event));
+  worker.on('error', err => {
+    handleDocumentLoadError(err, event);
+    // Also send embeddings-stored event on error to reset UI
+    event.sender.send("doc:embeddings-stored");
+  });
 }
 
 function handleDocumentLoadError(err, event) {
   loadingDoc = false;
   console.log('Error:', err);
   event.reply("doc:load", { success: false, content: err.message });
+  // Send embeddings-stored event on error to reset UI
+  event.sender.send("doc:embeddings-stored");
 }
 
 async function serveOllama(event) {

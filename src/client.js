@@ -97,8 +97,17 @@ window.electronAPI.onOllamaRun((event, data) => {
 // Update the display when a document is loaded
 window.electronAPI.onDocumentLoaded((event, data) => {
   document.getElementById("file-spinner").style.display = "none";
-  fileButtonText.innerText = data.content; // change the button to say the name of the document
+  document.getElementById("file-open-icon").style.display = "inline-block";
+  fileButtonText.innerText = data.content || "Open a File"; // change the button to say the name of the document
   userInput.focus();
+});
+
+// Add a listener for when embeddings are stored
+window.electronAPI.onEmbeddingsStored(() => {
+  console.log('Embeddings stored event received by renderer');
+  document.getElementById("file-spinner").style.display = "none";
+  document.getElementById("file-open-icon").style.display = "inline-block";
+  fileButtonText.innerText = "Open a File";
 });
 
 // Send chat on enter key

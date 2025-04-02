@@ -26,10 +26,13 @@ contextBridge.exposeInMainWorld("electronAPI", {
     ipcRenderer.on("ollama:run", (event, data) => callback(event, data));
   },
   // Load a document via the file dialog
-  loadDocument: () => ipcRenderer.send("document:load"),
+  loadDocument: () => {
+    console.log("loadDocument called in preload");
+    ipcRenderer.send("doc:load");
+  },
   // Listen for document load status
   onDocumentLoaded: (callback) => {
-    ipcRenderer.on("document:loaded", (event, data) => callback(event, data));
+    ipcRenderer.on("document-content", (event, ...args) => callback(...args));
   },
   // Stop the current chat
   stopChat: () => ipcRenderer.send("chat:stop"),
@@ -48,4 +51,8 @@ contextBridge.exposeInMainWorld("electronAPI", {
   },
   // Set parser settings for document loading
   setParserSettings: (settings) => ipcRenderer.send("parser:settings", settings),
+  // Listen for embeddings stored event
+  onEmbeddingsStored: (callback) => {
+    ipcRenderer.on("doc:embeddings-stored", (event) => callback(event));
+  },
 });
