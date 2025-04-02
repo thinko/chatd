@@ -93,3 +93,9 @@ out/
 
 # this is where large ollama executables are stored
 src/service/ollama/runners
+
+.vscode
+
+# OS X
+.DS_Store
+
