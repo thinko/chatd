@@ -1,5 +1,5 @@
 const path = require("path");
-const pdfToMarkdown = require('pdf-to-markdown');
+const pdf2md = require('@opendocsg/pdf2md');
 const { pdfjs } = require("./pdfjs-dist/legacy/build/pdf");
 const { removeCitations, removeHyperlinks, preserveDocumentContext, splitText } = require("./clean");
 
@@ -78,8 +78,8 @@ async function parsePdfByPage(filePath) {
 // Parse PDF as Markdown using the pdf-to-markdown library
 async function parsePdfAsMd(filePath) {
   try {
-    // Use pdf-to-markdown to convert the PDF file to Markdown
-    const markdown = await pdfToMarkdown(filePath);
+    // Use pdf2md to convert the PDF file to Markdown
+    const markdown = await pdf2md(filePath);
     
     // Clean the markdown content
     const cleanContent = removeHyperlinks(removeCitations(markdown));
