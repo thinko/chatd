@@ -18,6 +18,12 @@ const {
 
 let model = "mistral";
 let loadingDoc = false;
+// Global state to track parser settings
+let parserSettings = {
+  txtParser: 'parseTxt',
+  pdfParser: 'parsePdf', 
+  mdParser: 'parseMd'
+};
 
 function debugLog(msg) {
   if (global.debug) {
@@ -147,7 +153,8 @@ async function selectDocumentFile() {
 
 function processDocument(filePath, event) {
   const worker = new Worker('./src/service/worker.js');
-  worker.postMessage(filePath);
+  // Pass both the file path and parser settings to the worker
+  worker.postMessage({ filePath, parserSettings });
 
   worker.on('message', async (e) => {
     if (e.success) {
@@ -184,6 +191,12 @@ function stopOllama(event) {
   stop();
 }
 
+// Handle parser settings updates from renderer
+function updateParserSettings(event, settings) {
+  parserSettings = settings;
+  console.log('Parser settings updated:', parserSettings);
+}
+
 module.exports = {
   setModel,
   getModel,
@@ -193,4 +206,5 @@ module.exports = {
   serveOllama,
   runOllamaModel,
   stopOllama,
+  updateParserSettings,
 };

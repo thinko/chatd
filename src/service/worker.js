@@ -1,14 +1,24 @@
 const { parentPort } = require('worker_threads');
-const { loadFile } = require("./document/reader.js");
-const { embed } = require("./embedding.js");
+const { loadFile } = require('../document/reader');
+const { embed } = require('../embedding');
+const path = require('path');
 
-parentPort.on('message', async (filePath) => {
-    console.log('worker received:', filePath);
-    // open the file and read the contents
-    const doc = await loadFile(filePath); // TODO: batch read the file in chunks to avoid loading the entire file into memory
-    // generate embeddings for each section
-    const embeddings = await embed(doc);
-
-    // Respond back to the main process
-    parentPort.postMessage({ success: true, embeddings: embeddings });
+// Listen for messages from the main thread
+parentPort.on('message', async (message) => {
+  try {
+    const { filePath, parserSettings } = message;
+    console.log(`Worker processing file: ${filePath}`);
+    
+    // Use the parser settings when loading the file
+    const loadedFile = await loadFile(filePath, parserSettings);
+    
+    console.log("Generating embeddings...");
+    const embeddings = await embed(loadedFile.data);
+    console.log("Embeddings generated");
+    
+    parentPort.postMessage({ success: true, embeddings });
+  } catch (err) {
+    console.error('Worker error:', err);
+    parentPort.postMessage({ success: false, content: err.message });
+  }
 });

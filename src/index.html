@@ -72,6 +72,57 @@
         <div class="settings-content">
             <label for="model-select" id="model-label">Model Name</label>
             <input id="model-select" placeholder="Select a model" autofocus>
+            
+            <div class="parser-settings">
+                <h3>Document Parser Settings</h3>
+                
+                <div class="parser-option">
+                    <span class="parser-label">Text Files (TXT):</span>
+                    <div class="radio-group">
+                        <label>
+                            <input type="radio" name="txt-parser" value="parseTxt" checked>
+                            Default
+                        </label>
+                        <label>
+                            <input type="radio" name="txt-parser" value="parseTxtNew">
+                            New Parser
+                        </label>
+                    </div>
+                </div>
+                
+                <div class="parser-option">
+                    <span class="parser-label">PDF Files:</span>
+                    <div class="radio-group">
+                        <label>
+                            <input type="radio" name="pdf-parser" value="parsePdf" checked>
+                            Default
+                        </label>
+                        <label>
+                            <input type="radio" name="pdf-parser" value="parsePdfByPage">
+                            By Page
+                        </label>
+                        <label>
+                            <input type="radio" name="pdf-parser" value="parsePdfAsMd">
+                            As Markdown
+                        </label>
+                    </div>
+                </div>
+                
+                <div class="parser-option">
+                    <span class="parser-label">Markdown Files (MD):</span>
+                    <div class="radio-group">
+                        <label>
+                            <input type="radio" name="md-parser" value="parseMd" checked>
+                            Default
+                        </label>
+                        <label>
+                            <input type="radio" name="md-parser" value="parseMdToHtml">
+                            HTML Parser
+                        </label>
+                    </div>
+                </div>
+            </div>
+            
             <div class="button-group">
                 <button id="cancel-btn">Cancel</button>
                 <button id="save-btn">Save</button>
