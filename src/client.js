@@ -5,7 +5,7 @@ const userInput = document.getElementById("user-input-text");
 const historyContainer = document.getElementById("history");
 const openFileButton = document.getElementById("file-open");
 const fileButtonText = document.getElementById("file-button-text");
-const initalSpinner = document.getElementById("spinner");
+const initialSpinner = document.getElementById("spinner");
 const statusMsg = document.getElementById("status-msg");
 const settingsIcon = document.getElementById("settings-icon");
 const statusContainer = document.getElementById("status-container");
@@ -18,6 +18,38 @@ const settingsSaveBtn = document.getElementById("save-btn");
 const modelSelectInput = document.getElementById("model-select");
 
 let responseElem;
+
+// Parser settings
+let parserSettings = {
+  txtParser: 'parseTxt',
+  pdfParser: 'parsePdf',
+  mdParser: 'parseMd'
+};
+
+// Load saved parser settings if available
+function loadParserSettings() {
+  const savedSettings = localStorage.getItem('parserSettings');
+  if (savedSettings) {
+    parserSettings = JSON.parse(savedSettings);
+    
+    // Update radio buttons to match saved settings
+    document.querySelector(`input[name="txt-parser"][value="${parserSettings.txtParser}"]`).checked = true;
+    document.querySelector(`input[name="pdf-parser"][value="${parserSettings.pdfParser}"]`).checked = true;
+    document.querySelector(`input[name="md-parser"][value="${parserSettings.mdParser}"]`).checked = true;
+  }
+}
+
+// Save parser settings
+function saveParserSettings() {
+  parserSettings.txtParser = document.querySelector('input[name="txt-parser"]:checked').value;
+  parserSettings.pdfParser = document.querySelector('input[name="pdf-parser"]:checked').value;
+  parserSettings.mdParser = document.querySelector('input[name="md-parser"]:checked').value;
+  
+  localStorage.setItem('parserSettings', JSON.stringify(parserSettings));
+  
+  // Send updated parser settings to main process
+  window.electronAPI.setParserSettings(parserSettings);
+}
 
 /**
  * This is the initial chain of events that must run on start-up.
@@ -33,7 +65,7 @@ window.electronAPI.serveOllama();
 // 2. Run the model
 window.electronAPI.onOllamaServe((event, data) => {
   if (!data.success) {
-    initalSpinner.style.display = "none";
+    initialSpinner.style.display = "none";
     statusMsg.textContent =
       "Error: " + (data.content || "Unknown error occurred.");
     return;
@@ -48,7 +80,7 @@ window.electronAPI.onOllamaServe((event, data) => {
 // 3. Monitor the run status
 window.electronAPI.onOllamaRun((event, data) => {
   if (!data.success) {
-    initalSpinner.style.display = "none";
+    initialSpinner.style.display = "none";
     statusMsg.textContent = "Error: " + data.content;
     return;
   }
@@ -266,4 +298,32 @@ userInput.addEventListener("input", function () {
   this.style.height = "auto";
   this.style.height = this.scrollHeight + "px";
   chatView.scrollTop = chatView.scrollHeight; // scroll to bottom of the screen
+});
+
+// Event listener for settings
+document.addEventListener('DOMContentLoaded', function() {
+  // Load saved parser settings
+  loadParserSettings();
+  
+  // Settings save button event listener
+  document.getElementById('save-btn').addEventListener('click', function() {
+    // Save the model name
+    const modelName = document.getElementById('model-select').value;
+    if (modelName) {
+      localStorage.setItem('selectedModel', modelName);
+    }
+    
+    // Save parser settings
+    saveParserSettings();
+    
+    // Hide settings view and show chat view
+    document.getElementById('settings-view').style.display = 'none';
+    document.getElementById('chat-view').style.display = 'block';
+  });
+  
+  // Settings cancel button event listener
+  document.getElementById('cancel-btn').addEventListener('click', function() {
+    document.getElementById('settings-view').style.display = 'none';
+    document.getElementById('chat-view').style.display = 'block';
+  });
 });
